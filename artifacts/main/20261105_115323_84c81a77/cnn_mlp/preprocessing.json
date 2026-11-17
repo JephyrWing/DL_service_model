@@ -1,0 +1,117 @@
+{
+  "schema_version": 2,
+  "model_kind": "cnn_mlp",
+  "architecture": "GAP",
+  "experiment": "B",
+  "input_unit": "whole_wav",
+  "audio": {
+    "sample_rate": 16000,
+    "segment_seconds": 60.0,
+    "n_mels": 64,
+    "n_fft": 1024,
+    "hop_length": 512,
+    "fmin": 0.0,
+    "fmax": 8000.0,
+    "top_db": 80.0
+  },
+  "environment": {
+    "columns": [
+      "hive temp",
+      "hive humidity",
+      "hive pressure",
+      "weather temp",
+      "weather pressure"
+    ],
+    "median": [
+      28.01,
+      41.54,
+      1009.3,
+      19.130000000000003,
+      1015.0
+    ],
+    "mean": [
+      29.249660818713455,
+      44.277801169590646,
+      1009.2395087719299,
+      20.25943859649123,
+      1014.6350877192982
+    ],
+    "std": [
+      8.378191405666577,
+      18.498637385133677,
+      2.4204802079458436,
+      5.566154880405535,
+      2.3471140344156565
+    ],
+    "training_observations": 855,
+    "version": 1,
+    "current_dim": 11,
+    "time_part_categories": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "sequence_length": 6,
+    "sequence_dim": 12,
+    "max_gap_hours": 2.0,
+    "padding_value": 0.0,
+    "padding": "right",
+    "delta_mean": 0.0,
+    "delta_std": 1.0
+  },
+  "quality": {
+    "silence_rms": 1e-05,
+    "manual_exclusions": {}
+  },
+  "label_map": {
+    "0": "queen status 0",
+    "1": "queen status 1",
+    "2": "queen status 2",
+    "3": "queen status 3"
+  },
+  "normalization": {
+    "mean": -24.54474449666169,
+    "variance": 180.5870883803708
+  },
+  "class_weights": {
+    "0": 1.7110344827586208,
+    "1": 1.8654135338345865,
+    "2": 1.1433179723502305,
+    "3": 0.4987937273823884
+  },
+  "seed": 42,
+  "batch_size": 64,
+  "autotune": true,
+  "monitoring": {
+    "recording_seconds": 60,
+    "smoothing_window": 3,
+    "max_gap_seconds": 300
+  },
+  "cnn_trial": {
+    "trial": 1,
+    "learning_rate": 0.001,
+    "dropout": 0.3,
+    "val_loss": 0.4817100763320923,
+    "best_epoch": 34,
+    "epochs": 39,
+    "fit_seconds": 893.379409000001,
+    "epoch_seconds": 22.90716433333336
+  },
+  "mlp_trial": {
+    "trial": 1,
+    "learning_rate": 0.001,
+    "dropout": 0.3,
+    "val_loss": 0.23687970638275146,
+    "best_epoch": 43,
+    "epochs": 48,
+    "fit_seconds": 7.5399698999972316,
+    "epoch_seconds": 0.15708270624994233
+  },
+  "files": {
+    "test_manifest": "test_manifest.csv",
+    "test_environment": "environment_test.csv"
+  }
+}

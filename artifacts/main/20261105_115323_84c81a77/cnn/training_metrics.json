@@ -1,0 +1,11 @@
+{
+  "autotune": true,
+  "trial": 1,
+  "learning_rate": 0.001,
+  "dropout": 0.3,
+  "val_loss": 0.4817100763320923,
+  "best_epoch": 34,
+  "epochs": 39,
+  "fit_seconds": 893.379409000001,
+  "epoch_seconds": 22.90716433333336
+}

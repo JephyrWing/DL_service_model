@@ -1,0 +1,53 @@
+# Python / notebooks
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.pytest_cache/
+.test_cache/
+
+# Local configuration / credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Raw audio, feature caches and distribution archives
+dataset/
+dist/
+*.npy
+*.npz
+*.zip
+*.log
+
+# Keep only selected reproducible portfolio artifacts.
+artifacts/*
+!artifacts/main/
+artifacts/main/*
+!artifacts/main/20261105_115323_84c81a77/
+!artifacts/demo_inputs/
+!artifacts/experiments/
+artifacts/experiments/*
+!artifacts/experiments/ex_a/
+!artifacts/experiments/ex_b/
+!artifacts/experiments/ex_c/
+artifacts/experiments/ex_a/*
+artifacts/experiments/ex_b/*
+artifacts/experiments/ex_c/*
+!artifacts/experiments/ex_a/20261104_150346_bef19229/
+!artifacts/experiments/ex_b/20261104_161239_b6f71598/
+!artifacts/experiments/ex_c/20261104_214633_dbec8108/
+artifacts/experiments/ex_a/20261104_150346_bef19229/*
+artifacts/experiments/ex_b/20261104_161239_b6f71598/*
+artifacts/experiments/ex_c/20261104_214633_dbec8108/*
+!artifacts/experiments/ex_a/20261104_150346_bef19229/report/
+!artifacts/experiments/ex_b/20261104_161239_b6f71598/report/
+!artifacts/experiments/ex_c/20261104_214633_dbec8108/report/
+
+# Operating system / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

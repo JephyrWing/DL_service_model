@@ -1,0 +1,143 @@
+벌통 상태 분류 프로젝트 설명 및 보고서 작성 안내
+2026-11-05 기준
+
+1. 프로젝트 목적과 현재 구현
+
+벌통 녹음과 환경 센서값을 결합해 여왕벌 상태를 네 클래스로 분류한다.
+현재 서비스 모델은 CNN-MLP다. bee_status.ipynb가 데이터 연결, 분할,
+전처리, 학습, 평가, 저장을 수행하고 streamlit_bee_status.py가 저장 모델을
+불러와 JSON과 WAV 입력을 분석한다. 코드와 저장된 결과를 설명할 때는
+이 문서와 현재 코드, 해당 실행의 결과 파일을 함께 참조한다.
+
+분류 라벨의 의미는 다음과 같다.
+0  기존 여왕벌 존재
+1  여왕벌 없음
+2  새 여왕벌 거부됨
+3  새 여왕벌 수용됨
+
+학습 정답 열은 dataset/all_data_updated.csv의 queen status다.
+target, queen presence, queen acceptance는 입력 특징으로 사용하지 않는다.
+
+2. 데이터와 시각
+
+원본 CSV는 1,275행과 23열이며, 프로젝트의 WAV 7,100개는 원본 관측
+1,222개와 연결된다. 원본 관측 하나에 여러 60초 WAV 구간이 연결된다.
+WAV의 원본 식별자는 파일명의 __segmentN 앞부분이다.
+
+observed_at은 CSV의 date다. recorded_at은 observed_at에 60초와
+세그먼트 번호 N을 곱한 값을 더해 계산한 구간 시작 시각이다.
+예를 들어 원본 관측이 22시 05분 58초이고 segment4면 recorded_at은
+22시 09분 58초다. 원본 CSV의 관측 시각과 구간 시각은 이렇게 구분한다.
+
+전체 원본 WAV 데이터는 이 패키지의 dataset 폴더에 포함하지 않는다.
+dataset/all_data_updated.csv와 artifacts/demo_inputs의 시연 WAV 10개를
+포함한다. 전체 데이터로 재학습하거나 나머지 녹음을 분석하려면 원본
+데이터셋의 WAV 파일을 기존 경로 구조로 배치해야 한다.
+원본 출처는 docs/DATASET_DESCRIPTION.md에 기록되어 있다.
+
+3. 현재 CNN-MLP 입력과 구조
+
+WAV 전체를 모노 16kHz로 변환하고 60초 길이에 맞춘다. 로그멜 변환은
+mel 64개, n_fft 1024, hop_length 512이며 배열 크기는 (64, 1876, 1)이다.
+학습 녹음으로 구한 오디오 평균과 분산은 인코더의 Normalization 층에
+저장되어 추론 시 적용된다.
+
+CNN은 Conv2D 16/32/64, MaxPooling, GlobalAveragePooling과 Dense를
+사용해 음향 특징 64개를 추출한다. CNN을 먼저 학습한 뒤 인코더를
+고정하고 MLP를 학습한다.
+
+센서 입력은 hive temp, hive humidity, hive pressure, weather temp,
+weather pressure 순서다. 학습 분할의 중복 없는 원본 관측으로 구한
+중앙값으로 결측을 대체하고 평균과 표준편차로 표준화한다.
+weather pressure의 0과 비유한 값은 결측으로 처리한다.
+
+recorded_at의 hour // 4로 4시간 단위 6개 시간대를 원핫 인코딩한다.
+MLP 입력은 음향 특징 64개, 센서값 5개, 시간대 6개를 합한 75개다.
+MLP는 Dense 64, Dropout, Dense 32, 4클래스 softmax를 사용한다.
+현재 앱은 각 녹음의 현재 관측값을 사용한다. JSON에는 hive_id,
+source_id, observed_at, recorded_at, environment만 제공한다.
+
+4. 현재 학습과 평가
+
+메인 노트북은 실험 B의 원본 단위 70/15/15 층화 분할을 사용한다.
+같은 원본 녹음의 WAV들은 같은 분할에 배치한다. seed는 42다.
+WAV 수는 train 4,962개, val 1,056개, test 1,082개다.
+원본 수는 train 855개, val 183개, test 184개다.
+정확한 배정은 docs/experiment_splits와 실행별 manifest.csv를 참조한다.
+
+현재 기본 설정은 batch 64, 최대 50에포크, patience 5다.
+Autotune은 CNN과 MLP 각각에서 학습률 0.001/0.0005와 dropout
+0.3/0.2의 네 조합을 검증 손실로 비교한다. 실제 선택 값과 에포크는
+각 실행의 tuning_trials.csv와 training_metrics.json에 기록된다.
+
+가장 최근 완료된 메인 실행은 20261105_115323_84c81a77이다.
+artifacts/main/20261105_115323_84c81a77/test_summary.csv의 결과는
+다음과 같다.
+
+개별 WAV 평가  966/1082 정답, accuracy 0.8927911275,
+               macro F1 0.8662929200
+원본 단위 평가 173/184 정답, accuracy 0.9402173913,
+               macro F1 0.9186383681
+
+원본 단위 평가는 같은 source_id의 WAV별 클래스 확률을 평균한 뒤
+가장 큰 클래스를 선택한다. 앱은 업로드한 개별 WAV를 판정하므로
+보고서에서 두 평가 단위의 수치를 구분해 설명한다.
+
+분할 진단에 따르면 source_id 중복은 0개다. 테스트 원본 184개 모두
+같은 벌통·같은 날짜의 학습 관측을 가지며, 166개는 학습 관측과
+60분 이내다. 실험 B의 결과를 미관측 벌통 일반화 성능으로 해석할 때는
+이 분할 특성을 명시하고 실험 A 결과를 별도로 검토한다.
+
+5. 실험과 과거 결과의 위치
+
+bee_status_ex_a.ipynb는 외부 벌통 4-fold와 내부 벌통 3-fold 실험이다.
+bee_status_ex_b.ipynb는 원본 단위 70/15/15 층화 분할 실험이다.
+bee_status_ex_c.ipynb는 다른 벌통이 기록된 정시 구간에서 원본을
+보류하는 실험이다. 각각 artifacts/experiments/ex_a, ex_b, ex_c에
+실행별 지표, 예측, 그래프와 모델을 저장한다.
+
+artifacts/main은 메인 노트북의 실행 결과다. submission/ex_b는 이전
+제출용 실행 결과이며, cnn_mlp, cnn_lstm, comparison, recording_60s는
+이전 구현의 결과다. 파일의 원래 경로를 보존해 과거 결과를 구분한다.
+main/20261105_114210_d23c5370은 completed.json이 없는 부분 실행이다.
+완료된 실행 여부는 해당 폴더의 완료 표식과 실제 결과 파일로 확인한다.
+
+docs/README.md, MODEL_DESIGN.md, VALIDATION.md는 이전 CNN-MLP와
+CNN-LSTM 비교 구현의 설계·검증 이력을 포함한다. 현재 앱 설명에는
+이 문서와 START_HERE.md, 현재 소스 코드를 우선 참조한다.
+docs/PACKAGE_MANIFEST.json은 이전 bee_submission.zip에 대한 기록이다.
+현재 ZIP의 구성과 파일 해시는 ZIP 루트의 PACKAGE_MANIFEST.json이다.
+
+6. 앱 사용과 확인된 동작
+
+필요 패키지는 requirements.txt에 있으며, 앱 실행 명령은 다음과 같다.
+python -m streamlit run streamlit_bee_status.py
+
+앱은 artifacts/main의 최근 완료된 CNN-MLP 모델을 자동으로 불러온다.
+JSON과 WAV를 같은 이름으로 여러 쌍 올리고 입력 완료를 누르면
+요약표, 파일별 상태·점수, 재생 음성과 로그멜 그래프를 표시한다.
+JSON 예제는 앱에서 내려받을 수 있다. 자세한 입력 형식은 START_HERE.md다.
+
+시연 파일은 artifacts/demo_inputs/json과 wav에 10쌍 있으며,
+원본 테스트 세트에서 예측 성공 여부로 필터링하지 않고 뽑았다.
+별도 answers.json에 숫자 라벨과 한국어 의미를 기록한다.
+최신 모델의 개별 WAV 판정은 8/10 정답이며 sample_01과 sample_08이
+오답이다. 이 10건은 전체 테스트 성능을 대표하는 별도 벤치마크가 아니다.
+
+최근 코드 정리 후 현재 관측값만 사용하는 JSON/WAV 10쌍을 실제
+Streamlit 제출 경로로 검증했다. 앱의 센서 입력 배열은 노트북과
+일치했고, 최종 점수는 저장된 테스트 예측과 최대 약 3.54e-8 차이였다.
+현재 유효한 단위 검사는 python -m unittest discover -s tests -v로
+실행하며 전처리, 입력 검증, 파일 짝짓기, 라벨 순서를 확인한다.
+
+7. 패키지 종류
+
+bee_project_full_20261105.zip은 코드, 문서, CSV, tests와 artifacts의
+모든 파일을 포함한다. 과거 모델 가중치와 로그멜 특징 캐시도 포함한다.
+원본 데이터셋의 전체 WAV는 별도로 보관한다.
+
+bee_project_report_20261105.zip은 같은 코드와 문서, CSV, tests 및
+모든 실행의 CSV/JSON/TXT/PNG 결과를 포함한다. 모델 가중치, 특징
+배열과 음성 파일은 전체 보관 ZIP에서 확인할 수 있다. GPT와 보고서를
+작성할 때는 이 문서와 최신 test_summary.csv, 실험별 평가 결과를
+함께 읽고, 서로 다른 실행이나 분할의 수치를 섞지 않도록 구분한다.

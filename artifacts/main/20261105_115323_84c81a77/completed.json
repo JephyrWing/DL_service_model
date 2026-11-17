@@ -1,0 +1,6 @@
+{
+  "experiment": "B",
+  "architecture": "GAP",
+  "autotune": true,
+  "reload_max_score_difference": 7.450580596923828e-08
+}

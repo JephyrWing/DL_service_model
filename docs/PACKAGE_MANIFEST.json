@@ -1,0 +1,29 @@
+{
+  "format_version": 2,
+  "created_at": "2026-11-04T12:39:08.087542+00:00",
+  "submission_code_files": 2,
+  "package": "dist/bee_submission.zip",
+  "description": "Experiment B training notebook and standalone Streamlit app.",
+  "manifest_policy": "This manifest remains outside the submission ZIP.",
+  "environment": {
+    "python": "3.12.6",
+    "tensorflow": "2.20.0",
+    "keras": "3.15.1",
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "librosa": "0.11.0",
+    "streamlit": "1.66.1"
+  },
+  "files": [
+    {
+      "path": "bee_status.ipynb",
+      "size_bytes": 56279,
+      "sha256": "1258dbb21ee62e7a9e5387ff607b6d5c6d00668dde1fa498b9acfe719f81ac62"
+    },
+    {
+      "path": "streamlit_bee_status.py",
+      "size_bytes": 34567,
+      "sha256": "ad65f48a2a0246e9d4155e38f48bed11da21f98554ca135451621361f409b14e"
+    }
+  ]
+}
